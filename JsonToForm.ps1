@@ -1,3 +1,5 @@
+Import-Function -Name Set-PropertyUpdaters
+
 $fieldTypes = @{
   Form = '{6ABEE1F2-4AB4-47F0-AD8B-BDB36F37F64C}';
   Button = '{94A46D66-B1B8-405D-AAE4-7B5A9CD61C5E}';
@@ -33,92 +35,6 @@ $submitActionDefinitionTemplateId = '{05FE45D4-B9C7-40DE-B767-7C5ABE7119F9}'
 
 #region Field Processors
 
-function UpdateFormItem(
-  [hashtable]$properties,
-  [object]$element
-) {
-   
-  AddBoolProperty $properties "Is Tracking Enabled" "trackingEnabled" $element $true
-  AddBoolProperty $properties "Is Ajax" "isAjax" $element $true
-  AddBoolProperty $properties "Is Template" "isTemplate" $element $false
-
-  AddProperty $properties "Scripts" "scripts" $element
-  AddProperty $properties "Styles" "styles" $element
-}
-
-function UpdateTextItem(
-  [hashtable]$properties,
-  [object]$element
-) {
-
-  AddProperty $properties "Html Tag" "htmlTag" $element
-  AddProperty $properties "Text" "text" $element
-}
-
-function UpdateDateItem(
-  [hashtable]$properties,
-  [object]$element
-) {
-  
-  AddDateProperty $properties "Min" "min" $element
-  AddDateProperty $properties "Max" "max" $element
-  AddDateProperty $properties "Default Value" "defaultValue" $element
-}
-
-function UpdateInputItem (
-  [hashtable]$properties,
-  [object]$data
-) {
-
-  AddProperty $properties "Min Length" "minLength" $data
-  AddProperty $properties "Max Length" "maxLength" $data
-  AddProperty $properties "Placeholder Text" "placeholderText" $data
-
-  AddProperty $properties "Default Value" "defaultValue" $data
-}
-
-function UpdateDropdownListItem (
-  [hashtable]$properties,
-  [object]$data
-) {
-
-  AddBoolProperty $properties "Show Empty Item" "showEmptyItem" $data $true
-  
-  AddSelectionProperties $properties $data
-}
-
-function UpdateCheckboxItem(
-  [hashtable]$properties,
-  [object]$data
-) {
-  AddBoolProperty $properties "Default Value" "defaultValue" $data $false
-}
-
-function UpdateMultipleLineTextItem (
-  [hashtable]$properties,
-  [object]$data
-) {
-  AddProperty $properties "Rows" "rows" $data
-}
-
-function UpdateNumberItem (
-  [hashtable]$properties,
-  [object]$data
-) {
-  UpdateInputItem $properties $data
-
-  AddProperty $properties "Step" "step" $data
-}
-
-function UpdateButtonItem(
-  [hashtable]$properties,
-  [object]$data
-) {
-  AddProperty $properties "Label Css Class" "labelCssClass" $data
-  AddProperty $properties "Title" "title" $data
-  AddProperty $properties "Navigation Step" "navigationStep" $data
-}
-
 function CreateListOptions (
   [Sitecore.Data.Items.Item]$item,
   [object]$data
@@ -136,11 +52,12 @@ function CreateListOptions (
   $settingsItem = New-Item -Path "master:$($item.Paths.FullPath)\Settings" -ItemType $folderTemplateId
   $datasourceItem = New-Item -Path "master:$($settingsItem.Paths.FullPath)\Datasource" -ItemType $folderTemplateId 
 
-  foreach($option in $data.settings.datasource) {
+  foreach($option in $data.settings.datasource) 
+  {
     $name = $option.value
     $value = $option.value
 
-    $hasName - [bool]($option.PSObject.Properties.name -match "name")
+    $hasName = [bool]($option.PSObject.Properties.name -match "name")
 
     if ($hasName) {
       $name = $option.name
@@ -150,7 +67,7 @@ function CreateListOptions (
 
     $optionItem.Editing.BeginEdit()
     $optionItem["Value"] = $value
-    $optionItem.Editing.EndEdit()
+    $optionItem.Editing.EndEdit() | Out-Null
   }
 }
 
@@ -166,113 +83,15 @@ function CreateSubmitActions(
     $saveActionTypeId = $submitActions.$($option.submitAction)
 
     $saveProperties = @{ "Submit Action" = $saveActionTypeId; }
-    AddProperty $saveProperties "Parameters" "parameters" $option
+    Set-StringProperty $saveProperties "Parameters" "parameters" $option
 
-    UpdateNewItem $saveAction $saveProperties
-  }
-}
-
-function AddSelectionProperties(
-  [hashtable]$properties,
-  [object]$data
-) {
-  AddBoolProperty $properties "Is Dynamic" "isDynamic" $data $false
-  
-  AddProperty $properties "Display Field Name" "displayFieldName" $data
-  AddProperty $properties "Value Field Name" "valueFieldName" $data
-  AddProperty $properties "Default Selection" "defaultSelection" $data
-  AddProperty $properties "Datasource" "datasource" $data
-}
-
-function UpdateFormFieldItem (
-  [hashtable]$properties,
-  [object]$data
-) {
-
-  AddProperty $properties "Label Css Class" "labelCssClass" $data
-  AddProperty $properties "Title" "title" $data
-
-  AddBoolProperty $properties "Is Tracking Enabled" trackingEnabled $data $true
-  AddBoolProperty $properties "Required" "required" $data $false
-  AddBoolProperty $properties "Allow Save" "allowSave" $data $true
-}
-
-#endregion
-
-#region Property Updaters
-
-function AddProperty (
-  [hashtable]$properties,
-  [string]$itemPropertyName,
-  [string]$dataPropertyName,
-  [object]$data
-) {
-  $exists = [bool]($data.PSObject.Properties.name -match $dataPropertyName)
-
-  if ($exists) {
-    $properties.Add($itemPropertyName, $data.$dataPropertyName)
-  }
-}
-
-function AddBoolProperty (
-  [hashtable]$properties,
-  [string]$itemPropertyName,
-  [string]$dataPropertyName,
-  [object]$data,
-  [bool]$standardValue
-) {
-  $exists = [bool]($data.PSObject.Properties.name -match $dataPropertyName)
-
-  if (!$exists) { return }
-
-  $dataValue = [System.Convert]::ToBoolean($data.$dataPropertyName)
-
-  if ($dataValue -eq $standardValue) { return }
-
-  $dataSitecoreValue = if ($dataValue) { "1" } else { "0" }
-
-  $properties.Add($itemPropertyName, $dataSitecoreValue)
-}
-
-function AddDateProperty (
-  [hashtable]$properties,
-  [string]$itemPropertyName,
-  [string]$dataPropertyName,
-  [object]$data
-) {
-
-  $exists = [bool]($data.PSObject.Properties.name -match $dataPropertyName)
-
-  if (!$exists) { return }
-
-  $result = Get-Date
-  $success = [datetime]::TryParseExact(
-    $value,
-	"mm/dd/yyyy",
-	[system.Globalization.DateTimeFormatInfo]::InvariantInfo,
-    [system.Globalization.DateTimeStyles]::None,
-    [ref]$result
-  )
-  
-  if ($success) {
-    $resultString = $result.ToString("yyyymmdd")
-	
-    $properties.Add($itemPropertyName, $resultString)
+    Update-NewItem $saveAction $saveProperties
   }
 }
 
 #endregion
 
-function UpdateNewItem (
-  [Sitecore.Data.Items.Item]$item,
-  [hashtable]$properties
-) {
-  $item.Editing.BeginEdit()
-  $properties.Keys | % { $item[$_] = $properties[$_] }
-  $item.Editing.EndEdit() | Out-Null
-}
-
-function ProcessElements(
+function Invoke-ProcessElements(
   [array]$elements,
   [string]$rootPath
 ) {
@@ -280,106 +99,35 @@ function ProcessElements(
   $sortOrder = 0
 
   foreach($element in $elements) {
+    $itemProperties = @{ }
+    Set-ItemProperties $itemProperties $element
+   
     $elementTypeId = $fieldTypes.$($element.fieldType)
 
     $newItem = New-Item -Path "master:$($rootPath)\$($element.Name)" -ItemType $elementTypeId
-
-    $itemProperties = @{ }
-
-    $isFormField = $false
 	
 	switch($element.fieldType) {
-	  "Form" {
-	    UpdateFormItem $itemProperties $element
-	    break;
-	  }
 	  "Button" {
-        UpdateButtonitem $itemProperties $element
         CreateSubmitActions $newItem $element
 	    break;
 	  }
-	  "Checkbox" {
-        UpdateCheckboxItem $itemProperties $element
-        $isFormField = $true
-	    break;
-	  }
 	  "DrowdownList" {
-        UpdateDropdownList $itemProperties $element
         CreateListOptions $newItem $element
-        $isFormField = $true
-	    break;
-	  }
-	  "Email" {
-        # Email is just an input with an Email Validator on it
-        UpdateInputItem $itemProperties $element
-        $isFormField = $true
-	    break;
-	  }
-	  "Field" {
 	    break;
 	  }
 	  "List" {
         CreateListOptions $newItem $element       
-        AddSelectionProperties $itemProperties $element
-        $isFormField = $true
 	    break;
-	  }
-	  "ListBox" {
-	    break;
-	  }
-	  "MultipleLineText" {
-        UpdateInputItem $itemProperties $element
-        UpdateMultipleLineTextItem $itemProperties $element
-        $isFormField = $true
-	    break;
-	  }
-	  "Number" {
-        UpdateNumberItem $itemProperties $element
-        $isFormField = $true
-	    break;
-	  }
-	  "Password" {
-	    break;
-	  }
-	  "PasswordConfirmation" {
-	    break;
-	  }
-	  "Text" {
-	    UpdateTextItem $itemProperties $element
-	    break;
-	  }
-	  "Page" {
-	    # only Css Class
-	    break;
-	  }
-	  "Section" {
-	    # only Css Class
-	    break;
-	  }
-	  "Date" {
-	    UpdateDateItem $itemProperties $element
-        $isFormField = $true
-        break;
-	  }
-	  "Input" {
-	    UpdateInputItem $itemProperties $element
-        $isFormField = $true
-        break;
 	  }
 	}
 	
-    AddProperty $itemProperties "Css Class" "cssClass" $element
     $itemProperties.Add("__Sortorder", $sortOrder)
     $sortOrder += 100
 
-    if ($isFormField) {
-      UpdateFormFieldItem $itemProperties $element
-    }
-
-    UpdateNewItem $newItem $itemProperties
+    Update-NewItem $newItem $itemProperties
 
 	if ($element.elements.count -gt 0) {
-	  ProcessElements $element.elements $newItem.Paths.FullPath
+	  Invoke-ProcessElements $element.elements $newItem.Paths.FullPath
 	}
   }
 }
@@ -396,6 +144,7 @@ $formItem = New-Item -Path "master:\sitecore\Forms\$($formData.Name)" -ItemType 
 $formItemPath = $formItem.Paths.FullPath
 
 $formProperties = @{ }
-UpdateFormItem $formProperties $formData
-UpdateNewItem $formItem $formProperties
-ProcessElements $formData.elements $formItemPath
+Set-ItemProperties $formProperties $formData
+Update-NewItem $formItem $formProperties
+
+Invoke-ProcessElements $formData.elements $formItemPath
