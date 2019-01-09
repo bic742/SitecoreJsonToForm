@@ -1,17 +1,6 @@
-Import-Function -Name Set-PropertyUpdaters
-Import-Function -Name Set-ButtonProperties
-Import-Function -Name Set-CheckboxProperties
-Import-Function -Name Set-DateProperties
-Import-Function -Name Set-FormFieldProperties
-Import-Function -Name Set-FormProperties
-Import-Function -Name Set-InputProperties
-Import-Function -Name Set-ListProperties
-Import-Function -Name Set-MultipleLineProperties
-Import-Function -Name Set-NumberProperties
-Import-Function -Name Set-SelectionProperties
-Import-Function -Name Set-TextProperties
+Import-Function -Name Set-SmartPropertyUpdaters
 
-$fieldTemplates = @{
+$fieldTypes = @{
   Form = '{6ABEE1F2-4AB4-47F0-AD8B-BDB36F37F64C}';
   Button = '{94A46D66-B1B8-405D-AAE4-7B5A9CD61C5E}';
   Checkbox = '{2F07293C-077F-456C-B715-FDB791ACB367}';
@@ -94,7 +83,7 @@ function CreateSubmitActions(
     $saveActionTypeId = $submitActions.$($option.submitAction)
 
     $saveProperties = @{ "Submit Action" = $saveActionTypeId; }
-    Add-StringProperty $saveProperties "Parameters" "parameters" $option
+    Set-StringProperty $saveProperties "Parameters" "parameters" $option
 
     Update-NewItem $saveAction $saveProperties
   }
@@ -106,99 +95,34 @@ function Invoke-ProcessElements(
   [array]$elements,
   [string]$rootPath
 ) {
-
+ 
   $sortOrder = 0
 
   foreach($element in $elements) {
-    $templateTypeId = $fieldTemplates.$($element.fieldTemplate)
-
-    $newItem = New-Item -Path "master:$($rootPath)\$($element.Name)" -ItemType $templateTypeId
-
     $itemProperties = @{ }
+    Set-ItemProperties $itemProperties $element
+   
+    $elementTypeId = $fieldTypes.$($element.fieldType)
 
-    $isFormField = $false
-
-	switch($element.fieldTemplate) {
-	  "Form" {
-	    Set-FormProperties $itemProperties $element
-	    break;
-	  }
+    $newItem = New-Item -Path "master:$($rootPath)\$($element.Name)" -ItemType $elementTypeId
+	
+	switch($element.fieldType) {
 	  "Button" {
-        Set-ButtonProperties $itemProperties $element
         CreateSubmitActions $newItem $element
 	    break;
 	  }
-	  "Checkbox" {
-        Set-CheckboxProperties $itemProperties $element
-        $isFormField = $true
-	    break;
-	  }
 	  "DrowdownList" {
-        Set-DropDownListProperties $itemProperties $element
         CreateListOptions $newItem $element
-        $isFormField = $true
-	    break;
-	  }
-	  "Email" {
-        # Email is just an input with an Email Validator on it
-        Set-EmailProperties $itemProperties $element
-        $isFormField = $true
-	    break;
-	  }
-	  "Field" {
 	    break;
 	  }
 	  "List" {
-        Set-SelectionProperties $itemProperties $element
         CreateListOptions $newItem $element       
-        $isFormField = $true
 	    break;
-	  }
-	  "ListBox" {
-	    break;
-	  }
-	  "MultipleLineText" {
-        Set-InputProperties $itemProperties $element
-        Set-MultipleLineProperties $itemProperties $element
-        $isFormField = $true
-	    break;
-	  }
-	  "Number" {
-        Set-NumberProperties $itemProperties $element
-        $isFormField = $true
-	    break;
-	  }
-	  "Password" {
-	    break;
-	  }
-	  "PasswordConfirmation" {
-	    break;
-	  }
-	  "Text" {
-	    Set-TextProperties $itemProperties $element
-	    break;
-	  }
-	  "Date" {
-	    Set-DateProperties $itemProperties $element
-        $isFormField = $true
-        break;
-	  }
-	  "Input" {
-	    Set-InputProperties $itemProperties $element
-        $isFormField = $true
-        break;
 	  }
 	}
-
-    Add-StringProperty $itemProperties "Css Class" "cssClass" $element
-    Add-FieldTypeProperty $itemProperties $element
-
+	
     $itemProperties.Add("__Sortorder", $sortOrder)
     $sortOrder += 100
-
-    if ($isFormField) {
-      Set-FormFieldProperties $itemProperties $element
-    }
 
     Update-NewItem $newItem $itemProperties
 
@@ -216,10 +140,11 @@ $formDataItem = Get-Item -Path master:$($formDataFilePath)
 $formJson = $formDataItem.Json
 $formData = ConvertFrom-Json $formJson
 
-$formItem = New-Item -Path "master:\sitecore\Forms\$($formData.Name)" -ItemType $($fieldTemplates.Form)
+$formItem = New-Item -Path "master:\sitecore\Forms\$($formData.Name)" -ItemType $($fieldTypes.Form)
 $formItemPath = $formItem.Paths.FullPath
 
 $formProperties = @{ }
-Set-FormProperties $formProperties $formData
+Set-ItemProperties $formProperties $formData
 Update-NewItem $formItem $formProperties
-Invoke-ProcessElements $formData.elements $formItemPath 
+
+Invoke-ProcessElements $formData.elements $formItemPath
