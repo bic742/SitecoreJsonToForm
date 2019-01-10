@@ -10,6 +10,10 @@ Import-Function -Name Set-MultipleLineProperties
 Import-Function -Name Set-NumberProperties
 Import-Function -Name Set-SelectionProperties
 Import-Function -Name Set-TextProperties
+Import-Function -Name Set-PasswordProperties
+Import-Function -Name Set-ConfirmPasswordProperties
+
+#region Declarations
 
 $fieldTemplates = @{
   Form = '{6ABEE1F2-4AB4-47F0-AD8B-BDB36F37F64C}';
@@ -43,6 +47,8 @@ $submitActions = @{
 $folderTemplateId = '{A87A00B1-E6DB-45AB-8B54-636FEC3B5523}'
 $extendedListItemTemplateId = '{B3BDFE59-6667-4432-B261-05D0E3F7FDF6}'
 $submitActionDefinitionTemplateId = '{05FE45D4-B9C7-40DE-B767-7C5ABE7119F9}'
+
+#endregion
 
 #region Field Processors
 
@@ -169,9 +175,14 @@ function Invoke-ProcessElements(
 	    break;
 	  }
 	  "Password" {
+        Set-PasswordProperties $itemProperties $element
+        $isFormField = $true
 	    break;
 	  }
 	  "PasswordConfirmation" {
+        Set-PasswordProperties $itemProperties $element
+        Set-ConfirmPasswordProperties $itemProperties $element
+        $isFormField = $true
 	    break;
 	  }
 	  "Text" {
@@ -208,9 +219,9 @@ function Invoke-ProcessElements(
   }
 }
 
-## $formDataFilePath = Read-Host "Enter path to form data configuration file: "
+$formDataFilePath = Read-Host "Enter path to form data configuration file: "
 
-$formDataFilePath = "/sitecore/content/Shared Datasources/SampleForm"
+# $formDataFilePath = "/sitecore/content/Shared Datasources/SampleForm"
 
 $formDataItem = Get-Item -Path master:$($formDataFilePath)
 $formJson = $formDataItem.Json

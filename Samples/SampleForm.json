@@ -1,0 +1,175 @@
+{
+    "name": "Meeting Proposal Test",
+    "fieldTemplate": "Form",
+    "elements": [
+      {
+        "name": "Page",
+        "fieldTemplate": "Page",
+        "elements": [
+          {
+            "name": "OrganizerText",
+            "fieldTemplate": "Text",
+            "text": "Organizer",
+            "htmlTag": "h2"
+          },
+          {
+            "name": "Form Group - ProposalDate",
+            "fieldTemplate": "Section",
+            "cssClass": "form-group",
+            "elements": [
+              {
+                "name": "ProposalDate",
+                "fieldTemplate": "Date",
+                "title": "When do you need the proposal by?",
+                "cssClass": "form-control",
+                "required": true,
+                "validations": []
+              }
+            ]
+          },
+          {
+            "name": "Form Group - FirstName",
+            "fieldTemplate": "Section",
+            "cssClass": "form-group",
+            "elements": [
+              {
+                "name": "firstname",
+                "fieldTemplate": "Input",
+                "title": "First Name",
+                "placeholderText": "First Name",
+                "cssClass": "form-control",
+                "required": true,
+                "validations": []
+              }
+            ]
+          },
+          {
+            "name": "Form Group - LastName",
+            "fieldTemplate": "Section",
+            "cssClass": "form-group",
+            "elements": [
+              {
+                "name": "lastname",
+                "fieldTemplate": "Input",
+                "title": "Last Name",
+                "placeholderText": "Last Name",
+                "cssClass": "form-control",
+                "required": true,
+                "validations": []
+              }
+            ]
+          },
+          {
+            "name": "Form Group - Company",
+            "fieldTemplate": "Section",
+            "cssClass": "form-group",
+            "elements": [
+              {
+                "name": "company",
+                "fieldTemplate": "Input",
+                "title": "Company",
+                "placeholderText": "Company",
+                "cssClass": "form-control",
+                "required": true,
+                "validations": []
+              }
+            ]
+          },
+          {
+            "name": "Form Group - Address Line 1",
+            "fieldTemplate": "Section",
+            "cssClass": "form-group",
+            "elements": [
+              {
+                "name": "addressLine1",
+                "fieldTemplate": "Input",
+                "title": "Address Line 1",
+                "placeholderText": "Address Line 1",
+                "cssClass": "form-control",
+                "required": true,
+                "validations": []
+              }
+            ]
+          },
+          {
+            "name": "Form Group - Address Line 2",
+            "fieldTemplate": "Section",
+            "cssClass": "form-group",
+            "elements": [
+              {
+                "name": "addressLine2",
+                "fieldTemplate": "Input",
+                "title": "Address Line 2",
+                "placeholderText": "Address Line 2",
+                "cssClass": "form-control",
+                "validations": []
+              }
+            ]
+          },
+          {
+            "name": "Form Group - City",
+            "fieldTemplate": "Section",
+            "cssClass": "form-group",
+            "elements": [
+              {
+                "name": "city",
+                "fieldTemplate": "Input",
+                "title": "City",
+                "placeholderText": "city",
+                "cssClass": "form-control",
+                "required": true,
+                "validations": []
+              }
+            ]
+          },
+          {
+            "name": "Form Group - State",
+            "fieldTemplate": "Section",
+            "cssClass": "form-group",
+            "elements": [
+              {
+                "name": "state",
+                "fieldTemplate": "DropdownList",
+                "title": "State",
+                "cssClass": "form-control",
+                "required": true,
+                "datasource": ""
+              }
+            ]
+          },
+          {
+            "name": "Form Group - Postal Code",
+            "fieldTemplate": "Section",
+            "cssClass": "form-group",
+            "elements": [
+              {
+                "name": "postalcode",
+                "fieldTemplate": "Input",
+                "title": "Zip Code",
+                "placeholderText": "Zip Code",
+                "cssClass": "form-control",
+                "required": true,
+                "validations": []
+              }
+            ]
+          },
+          {
+            "name": "Form Group - Country",
+            "fieldTemplate": "Section",
+            "cssClass": "form-group",
+            "elements": [
+              {
+                "name": "country",
+                "fieldTemplate": "Input",
+                "title": "Country",
+                "placeholderText": "Country",
+                "cssClass": "form-control",
+                "required": true,
+                "validations": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
